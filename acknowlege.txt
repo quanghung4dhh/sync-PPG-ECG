@@ -1,0 +1,15 @@
+https://pmc.ncbi.nlm.nih.gov/articles/PMC8963096/
+
+https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.butter.html
+
+https://stackoverflow.com/questions/12093594/how-to-implement-band-pass-butterworth-filter-with-scipy-signal-butter
+
+https://github.com/sparkfun/SparkFun_MAX3010x_Sensor_Library
+
+https://www.researchgate.net/publication/397815397_Butterworth_Filtering_at_500_Hz_Optimizes_PPG-Based_Heart_Rate_Variability_Analysis_for_Wearable_Devices_A_Comparative_Study
+
+https://www.nature.com/articles/s41598-024-57297-3
+
+https://www.sciencedirect.com/science/article/pii/S095461111300053X
+
+https://github.com/sparkfun/SparkFun_MAX3010x_Sensor_Library/issues/25
