@@ -7,7 +7,7 @@ from BandPass_filter import RealTimeBandpassFilter
 from PPG_analyzer import PPGAnalyzer
 
 
-def monitor_max30102_signal(port, baud_rate=115200, window_size=250):
+def monitor_max30102_signal(port, baud_rate=115200, window_size=500):
     """
     Hàm vẽ đồ thị thời gian thực cho cảm biến MAX30102.
 
@@ -33,12 +33,12 @@ def monitor_max30102_signal(port, baud_rate=115200, window_size=250):
 
     # Khởi tạo bộ lọc
     bandpassFilterRED = RealTimeBandpassFilter(
-        lowcut=0.5, highcut=7.0, fs=50, order=2)
+        lowcut=0.5, highcut=12.0, fs=100, order=2)
     bandpassFilterIR = RealTimeBandpassFilter(
-        lowcut=0.5, highcut=7.0, fs=50, order=2)
+        lowcut=0.5, highcut=12.0, fs=100, order=2)
 
     # Khởi tạo bộ tính toán BPM và SpO2
-    analyzer = PPGAnalyzer(fs=50, spo2_cal_coeffs=(110, 25))
+    analyzer = PPGAnalyzer(fs=100, spo2_cal_coeffs=(110, 25))
 
     # Khởi tạo deque để chứa dữ liệu thô
     raw_red_data = deque([0] * window_size, maxlen=window_size)
@@ -48,13 +48,18 @@ def monitor_max30102_signal(port, baud_rate=115200, window_size=250):
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 8))
     fig.canvas.manager.set_window_title(f'MAX30102 Signal Monitor - {port}')
 
+    # Setup trục cố định
+    ax1.set_ylim(-1500, 1500)
+    ax2.set_ylim(-2000, 2000)
+
     # Biểu đồ RED
     line_red, = ax1.plot(red_data, color='#FF5252', linewidth=1.5, label='RED')
     ax1.set_ylabel('Amplitude (Red)')
     ax1.legend(loc='upper right')
     ax1.grid(True, linestyle=':', alpha=0.6)
     # Title của ax1 sẽ dùng để hiển thị kết quả BPM/SpO2
-    title_text = ax1.set_title("Waiting for data...", fontsize=14, color='blue', fontweight='bold')
+    title_text = ax1.set_title(
+        "Waiting for data...", fontsize=14, color='blue', fontweight='bold')
 
     # Biểu đồ IR
     line_ir, = ax2.plot(ir_data, color='#448AFF', linewidth=1.5, label='IR')
@@ -103,27 +108,27 @@ def monitor_max30102_signal(port, baud_rate=115200, window_size=250):
         line_red.set_ydata(red_data)
         line_ir.set_ydata(ir_data)
 
-        # Auto-scale trục Y linh hoạt
-        try:
-            ax1.relim()
-            ax1.autoscale_view()
-            ax2.relim()
-            ax2.autoscale_view()
-        except:
-            pass  # Tránh lỗi khi dữ liệu rỗng ban đầu
-        
-        #Tính toán BPM và SpO2
+        # # Auto-scale trục Y linh hoạt
+        # try:
+        #     ax1.relim()
+        #     ax1.autoscale_view()
+        #     ax2.relim()
+        #     ax2.autoscale_view()
+        # except:
+        #     pass  # Tránh lỗi khi dữ liệu rỗng ban đầu
+
+        # Tính toán BPM và SpO2
         frame_count += 1
         if frame_count % 10 == 0:
             # Truyền dữ liệu THÔ vào bộ phân tích
             # Lưu ý: Cần list/array dữ liệu thô, không phải dữ liệu đã qua bandpass
-            result = analyzer.analyze(red_signal=list(raw_red_data), 
+            result = analyzer.analyze(red_signal=list(raw_red_data),
                                       ir_signal=list(raw_ir_data))
-            
+
             if result['status'] == "Success":
                 display_text = f"BPM: {result['bpm']} | SpO2: {result['spo2']}%"
                 title_text.set_text(display_text)
-                
+
                 # Đổi màu chữ cảnh báo nếu SpO2 thấp
                 if result['spo2'] < 94:
                     title_text.set_color('red')
@@ -132,7 +137,7 @@ def monitor_max30102_signal(port, baud_rate=115200, window_size=250):
             else:
                 title_text.set_text("Analyzing...")
                 title_text.set_color('orange')
-        
+
         return line_red, line_ir
 
     # 5. Chạy Animation

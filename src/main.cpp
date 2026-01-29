@@ -32,7 +32,7 @@ void setup() {
 
   // Cấu hình các thông số cho cảm biến
   byte ledBrightness = 50; // Độ sáng LED (0-255). Tăng nếu tín hiệu yếu.
-  byte sampleAverage = 4;  // Lấy trung bình mẫu (1, 2, 4, 8, 16, 32)
+  byte sampleAverage = 2;  // Lấy trung bình mẫu (1, 2, 4, 8, 16, 32)
   byte ledMode = 2;        // 2 = Red + IR (Chế độ đo SpO2/HR)
   int sampleRate = 400;    // Tốc độ lấy mẫu (50, 100, 200, 400, 800, 1000, 1600, 3200)
   int pulseWidth = 411;    // Độ rộng xung (69, 118, 215, 411)
