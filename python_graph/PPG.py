@@ -7,7 +7,7 @@ from BandPass_filter import RealTimeBandpassFilter
 from PPG_analyzer import PPGAnalyzer
 
 
-def monitor_max30102_signal(port, baud_rate=115200, window_size=500):
+def monitor_max30102_signal(port, baud_rate=921600, window_size=500):
     """
     Hàm vẽ đồ thị thời gian thực cho cảm biến MAX30102.
 
@@ -84,10 +84,10 @@ def monitor_max30102_signal(port, baud_rate=115200, window_size=500):
                     continue
 
                 parts = line.split(',')
-                if len(parts) == 2:
+                if len(parts) == 3:
                     # Chuyển đổi sang số thực (đã sửa lại để red và ir không bị đảo ngược với nhau)
-                    r_val = float(parts[1])
-                    i_val = float(parts[0])
+                    r_val = float(parts[2])
+                    i_val = float(parts[1])
 
                     # Lọc tín hiệu
                     filtered_red = bandpassFilterRED.filter(r_val)

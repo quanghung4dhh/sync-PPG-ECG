@@ -1,62 +1,94 @@
 #include <Arduino.h>
 #include <Wire.h>
-#include "MAX30105.h" // Thư viện SparkFun dùng chung header này cho MAX30102
+#include "MAX30105.h"
 
 MAX30105 particleSensor;
 
-// Các chân I2C mặc định của ESP32
+// --- CẤU HÌNH CHÂN ---
 #define I2C_SDA 21
 #define I2C_SCL 22
 
-//Khá hề là việc hai tín hiệu RED và IR của MAX30102 bị đảo ngược
-//Tức là khi đọc RED thì cảm biên lại đọc IR và ngược lại
-//Vì vậy trong Serial sẽ in ra là IR, RED thay vì RED, IR
-//Bug này được giải thích trong github của thư viện SparkFun :)))
-//Link: https://github.com/sparkfun/SparkFun_MAX3010x_Sensor_Library/issues/25
-
+// Chân cho AD8232 (ECG)
+#define AD8232_PIN      36  // Chân Analog Input (Nên dùng chân 34-39 trên ESP32 vì là Input only, ít nhiễu)
+#define AD8232_LO_PLUS  18  // Leads Off +
+#define AD8232_LO_MINUS 19  // Leads Off -
 
 void setup() {
-  Serial.begin(115200);
-  Serial.println("Khoi tao MAX30102...");
+  // Tăng tốc độ Serial lên cao để kịp đẩy dữ liệu 100Hz (3 cột)
+  Serial.begin(921600); 
+  // Lưu ý: Nhớ chỉnh Monitor Speed trong platformio.ini là 921600
 
-  // Khởi tạo giao tiếp I2C
+  Serial.println("Khoi tao he thong...");
+
+  // 1. Cấu hình AD8232
+  pinMode(AD8232_PIN, INPUT);
+  pinMode(AD8232_LO_PLUS, INPUT);
+  pinMode(AD8232_LO_MINUS, INPUT);
+
+  // 2. Cấu hình I2C & MAX30102
   Wire.begin(I2C_SDA, I2C_SCL);
+  Wire.setClock(400000); // I2C Fast Mode
 
-  // Khởi động cảm biến
-  // Sử dụng I2C mặc định, tốc độ 400kHz
   if (!particleSensor.begin(Wire, I2C_SPEED_FAST)) {
-    Serial.println("Khong tim thay MAX30102. Vui long kiem tra dau noi/nguon!");
-    while (1); // Dừng chương trình nếu lỗi
+    Serial.println("Loi: Khong tim thay MAX30102!");
+    while (1);
   }
 
-
-  // Cấu hình các thông số cho cảm biến
-  byte ledBrightness = 50; // Độ sáng LED (0-255). Tăng nếu tín hiệu yếu.
-  byte sampleAverage = 2;  // Lấy trung bình mẫu (1, 2, 4, 8, 16, 32)
-  byte ledMode = 2;        // 2 = Red + IR (Chế độ đo SpO2/HR)
-  int sampleRate = 400;    // Tốc độ lấy mẫu (50, 100, 200, 400, 800, 1000, 1600, 3200)
-  int pulseWidth = 411;    // Độ rộng xung (69, 118, 215, 411)
-  int adcRange = 4096;     // Dải đo ADC (2048, 4096, 8192, 16384)
+  // Cấu hình để đạt chuẩn 100Hz Output
+  byte ledBrightness = 50; 
+  byte sampleAverage = 4;  // 400Hz / 4 = 100Hz (Output Data Rate)
+  byte ledMode = 2;        // Red + IR
+  int sampleRate = 400;    // Tốc độ lấy mẫu nội tại
+  int pulseWidth = 411;    
+  int adcRange = 4096;     
 
   particleSensor.setup(ledBrightness, sampleAverage, ledMode, sampleRate, pulseWidth, adcRange);
+  
+  // Xóa rác trong buffer trước khi bắt đầu
+  particleSensor.clearFIFO();
+  
+  // In tiêu đề cho Serial Plotter (Tùy chọn)
+  // Serial.println("Time,ECG,Red,IR"); 
 }
 
 void loop() {
-  // Đọc giá trị thô từ cảm biến
-  long irValue = particleSensor.getIR();
-  long redValue = particleSensor.getRed();
+  // --- ĐỒNG BỘ HÓA ---
+  // check() trả về true nếu có dữ liệu mới trong FIFO
+  // Với cấu hình trên, dòng lệnh if này sẽ đúng mỗi 10ms (100Hz)
+  if (particleSensor.check()) {
+    
+    // 1. Lấy Timestamp ngay lập tức để đồng bộ thời gian
+    // unsigned long currentMicros = micros();
 
-  // Kiểm tra nếu không có ngón tay (giá trị hồng ngoại thấp)
-  if (irValue < 50000) {
-    Serial.print(" No finger?");
-    Serial.print("\t"); 
-  }
+    // 2. Đọc MAX30102 (Master)
+    // Lưu ý bug Red/IR swap như bạn đã đề cập
+    long irValue = particleSensor.getFIFOIR();   // Có thể là Red thực tế
+    long redValue = particleSensor.getFIFORed(); // Có thể là IR thực tế
 
-  // In ra Serial theo định dạng: "Red, IR"
-  // Định dạng này giúp Serial Plotter vẽ được 2 đường đồ thị cùng lúc
-  Serial.print(redValue);
-  Serial.print(",");
-  Serial.print(irValue);
+    // 3. Đọc AD8232 (Slave) - Đọc ngay sau khi có sự kiện từ MAX30102
+    int ecgValue = 0;
+    
+    // Kiểm tra tuột dây (Leads Off Detection)
+    if ((digitalRead(AD8232_LO_PLUS) == 1) || (digitalRead(AD8232_LO_MINUS) == 1)) {
+      ecgValue = 0; // Hoặc giá trị 2048 (giữa thang đo) để báo lỗi
+    } else {
+      ecgValue = analogRead(AD8232_PIN);
+    }
+
+    // 4. In ra Serial (CSV Format)
+    // Định dạng: Time, ECG, Red, IR
+    // Serial.print(currentMicros);
+    // Serial.print(",");
+    Serial.print(ecgValue);
+    Serial.print(",");
+    Serial.print(redValue);
+    Serial.print(",");
+    Serial.print(irValue);
   
-  Serial.println(); // Xuống dòng để kết thúc gói tin
+
+    Serial.println(); // Kết thúc dòng
+
+    // Chuyển sang mẫu tiếp theo trong FIFO (quan trọng)
+    particleSensor.nextSample();
+  }
 }

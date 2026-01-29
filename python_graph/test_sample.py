@@ -2,7 +2,7 @@ import serial
 import time
 
 # Thay cổng COM của bạn vào đây
-ser = serial.Serial('COM3', 115200) 
+ser = serial.Serial('COM3', 921600) 
 print("Dang do toc do lay mau (Sample Rate)...")
 
 count = 0
