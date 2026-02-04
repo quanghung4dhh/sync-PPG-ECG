@@ -6,7 +6,7 @@ import matplotlib.ticker as ticker
 import time
 
 # --- CẤU HÌNH ---
-CSV_FILENAME = 'data_raw1.csv'  # Đảm bảo tên file đúng
+CSV_FILENAME = 'DQH.csv'  # Đảm bảo tên file đúng
 FS = 100                       # Tần số lấy mẫu (Hz)
 WINDOW_SECONDS = 5             # Hiển thị đúng 5 giây
 WINDOW_SIZE = FS * WINDOW_SECONDS 

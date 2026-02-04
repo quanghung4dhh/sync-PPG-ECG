@@ -122,7 +122,7 @@ def update(frame):
                 ecg_notch = notch_filter_ecg.process_sample(raw_ecg)
                 ecg_filtered = bandpass_filter_ecg.filter(ecg_notch)
                 # Lưu vào deque (nhân 2 để tăng biên độ hiển thị nếu cần)
-                ecg_data.append(ecg_filtered * 2) 
+                ecg_data.append(ecg_filtered * 3) 
 
                 # 3. Xử lý PPG (Red & IR)
                 # Lưu dữ liệu thô cho thuật toán SpO2
