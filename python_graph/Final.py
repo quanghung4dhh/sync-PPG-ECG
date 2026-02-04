@@ -81,7 +81,7 @@ line_red, = ax2.plot(red_data, color='red', linewidth=1.5, label='PPG Red')
 ax2.set_ylabel('Amplitude')
 ax2.set_title("PPG Red", fontweight='bold')
 ax2.grid(True, linestyle=':', alpha=0.6)
-ax2.set_ylim(-1500, 1500)
+ax2.set_ylim(-2000, 2000)
 
 # 3. Đồ thị IR (PPG)
 line_ir, = ax3.plot(ir_data, color='blue', linewidth=1.5, label='PPG IR')
@@ -92,7 +92,7 @@ ax3.xaxis.set_major_formatter(ticker.FuncFormatter(sample_to_seconds))
 # Tiêu đề của biểu đồ IR sẽ dùng để hiển thị kết quả SpO2
 title_spo2 = ax3.set_title("PPG IR - Waiting for analysis...", fontweight='bold', color='gray')
 ax3.grid(True, linestyle=':', alpha=0.6)
-ax3.set_ylim(-2000, 2000)
+ax3.set_ylim(-3000, 3000)
 
 # --- HÀM CẬP NHẬT ---
 frame_counter = 0
