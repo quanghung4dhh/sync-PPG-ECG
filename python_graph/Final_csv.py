@@ -6,7 +6,7 @@ import matplotlib.ticker as ticker
 import time
 
 # --- CẤU HÌNH ---
-CSV_FILENAME = 'DQH.csv'  # Đảm bảo tên file đúng
+CSV_FILENAME = 'data2.csv'  # Đảm bảo tên file đúng
 FS = 100                       # Tần số lấy mẫu (Hz)
 WINDOW_SECONDS = 5             # Hiển thị đúng 5 giây
 WINDOW_SIZE = FS * WINDOW_SECONDS 
@@ -86,14 +86,14 @@ ax1.set_ylim(-3000, 3000)
 # 2. RED
 line_red, = ax2.plot(range(WINDOW_SIZE), red_data, color='red', linewidth=1.5)
 ax2.set_ylabel('Amplitude')
-ax2.set_ylim(-2000, 2000)
+ax2.set_ylim(-3000, 3000)
 
 # 3. IR
 line_ir, = ax3.plot(range(WINDOW_SIZE), ir_data, color='blue', linewidth=1.5)
 ax3.set_ylabel('Amplitude')
 ax3.set_xlabel('Time (seconds)')
 title_spo2 = ax3.set_title("Waiting to start...", fontweight='bold', color='gray')
-ax3.set_ylim(-3000, 3000)
+ax3.set_ylim(-5000, 5000)
 
 # --- BIẾN ĐIỀU KHIỂN PLAYBACK ---
 current_index = 0
