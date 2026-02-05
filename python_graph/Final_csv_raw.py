@@ -13,9 +13,6 @@ WINDOW_SIZE = FS * WINDOW_SECONDS
 
 # --- IMPORT MODULE ---
 try:
-    from Notch import RealTimeNotchFilter
-    from BandPass_filter import RealTimeBandpassFilter
-    from SGS import RealTimeSmoother
     from PPG_analyzer import PPGAnalyzer
 except ImportError as e:
     print(f"LỖI THIẾU THƯ VIỆN: {e}")
